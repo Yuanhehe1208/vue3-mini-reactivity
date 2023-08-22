@@ -32,7 +32,7 @@ class Dep {
     }
 }
 
-function effectWatch(effect) {
+export function effectWatch(effect) {
     // 依赖收集
     currentEffect = effect;
     effect()
@@ -40,15 +40,34 @@ function effectWatch(effect) {
     currentEffect = null;
 }
 
-// ref -> 很像了  在vue3 中 是这样监控一个基础类型的 ref(xx)
-const dep = new Dep(10);
-
-let b = 10
-effectWatch(() => {
-    b = dep.value + 10;
-    console.log(b)
-})
-
-// 值发生变更
-dep.value = 20;
-
+const targetMap = new Map();
+function getDep(target, key) {
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+        depsMap = new Map()
+        targetMap.set(target, depsMap)
+    }
+    let dep = depsMap.get(key)
+    if (!dep) {
+        dep = new Dep()
+        depsMap.set(key, dep)
+    }
+    return dep
+}
+export function reactive(raw) {
+    return new Proxy(raw, {
+        get(target, key) {
+            // 一个 key 对应一个 dep
+            // dep存储在哪里？
+            const dep = getDep(target, key)
+            dep.depend()
+            return Reflect.get(target, key)
+        },
+        set(target,key,value) {
+            const dep = getDep(target, key)
+            const result = Reflect.set(target, key, value)
+            dep.notice()
+            return result
+        }
+    })
+}

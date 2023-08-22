@@ -1,1 +1,8 @@
-vue3-mini-reactivity
+# vue3-mini-reactivity
+
+核心逻辑主要包含以下几个部分：
+
+1. Dep类：用于存储依赖和通知更新。每个Dep实例对应一个值，其中effects是一个Set，存储了所有依赖该值的effect函数。value属性用于获取值，当获取值时会进行依赖收集，将当前的effect函数添加到effects中。value属性的setter方法用于设置新的值，并通知所有依赖进行更新。
+2. effectWatch函数：用于创建一个effect函数，并在创建时进行依赖收集。effect函数是一个响应式的副作用函数，当依赖的值发生变化时会被调用。在调用effect函数之前，将当前的effect函数赋值给currentEffect变量，以便在依赖收集时能够将effect函数添加到对应的Dep实例中。依赖收集完毕后，将currentEffect重置为null。
+3. targetMap和getDep函数：用于存储和获取依赖关系。targetMap是一个Map，用于存储所有对象的依赖关系。getDep函数用于获取指定对象和属性的Dep实例，如果该对象和属性的依赖关系不存在，则创建一个新的Dep实例并存储起来。
+4. reactive函数：用于将一个普通对象转换为响应式对象。使用Proxy实现代理，当获取属性值时会进行依赖收集，即获取对应的Dep实例并调用depend方法。当设置属性值时，会通知对应的Dep实例进行更新。
